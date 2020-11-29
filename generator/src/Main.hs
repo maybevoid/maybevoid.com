@@ -9,10 +9,10 @@ import       Hakyll
 
 config :: Configuration
 config = defaultConfiguration
-  { providerDirectory = "../site"
-  , storeDirectory = "../hakyll-cache"
-  , tmpDirectory = "../hakyll-cache/tmp"
-  , destinationDirectory = "../site-dist"
+  { providerDirectory = "./site"
+  , storeDirectory = "./hakyll-cache"
+  , tmpDirectory = "./hakyll-cache/tmp"
+  , destinationDirectory = "./site-dist"
   }
 
 renderHtml :: Rules ()
@@ -33,6 +33,7 @@ main = hakyllWith config $ do
   match "pages/*" renderHtml
   match "drafts/*" renderHtml
 
+  match "CNAME" copyFiles
   match "robots.txt" copyFiles
   match "images/*" copyFiles
   match "pdf/*" copyFiles
