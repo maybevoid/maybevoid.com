@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="x-ua-compatible" content="ie=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <link rel="preload" as="font" href="https://maybevoid.com/fonts/vendor/jost/jost-v4-latin-regular.woff2" type="font/woff2" crossorigin>
+  <link rel="preload" as="font" href="https://maybevoid.com/fonts/vendor/jost/jost-v4-latin-700.woff2"  type="font/woff2" crossorigin>
+
+
+<link rel="stylesheet" href="https://maybevoid.com/main.css">
+
+
+
+  
+  
+  
+  
+  
+    
+  
+
+  
+  
+    
+    
+  
+  
+  
+    
+  
+  
+  
+  
+    
+  
+  
+  
+
+
+  <meta name="robots" content="index, follow">
+  <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <meta name="bingbot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+
+
+	
+
+
+	
+
+<title>Mononym: Type-Level Named Values in Rust - Part 1: Demo and Implementation | MaybeVoid</title>
+<meta name="description" content="">
+<link rel="canonical" href="https://maybevoid.com/blog/mononym-part-1/">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <meta name="theme-color" content="#fff">
+  <link rel="apple-touch-icon" sizes="180x180" href="https://maybevoid.com/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://maybevoid.com/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://maybevoid.com/favicon-16x16.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.18/dist/katex.min.css" integrity="sha384-zTROYFVGOfTw7JV7KUu8udsvW2fx4lWOsCEDqhBreBwlHI4ioVRtmIvEThzJHGET" crossorigin="anonymous">
+  
+    <link rel="manifest" href="https://maybevoid.com/site.webmanifest">
+  
+
+
+  
+
+</head>
+
+  
+
+<body class="blog single">
+  
+  
+<div class="header-bar fixed-top"></div>
+<header class="navbar fixed-top navbar-expand-md navbar-light">
+	<div class="container">
+		<input class="menu-btn order-0" type="checkbox" id="menu-btn">
+		<label class="menu-icon d-md-none" for="menu-btn"><span class="navicon"></span></label>
+		<a class="navbar-brand order-1 order-md-0 me-auto" href="https://maybevoid.com">MaybeVoid</a>
+		<button id="mode" class="btn btn-link order-2 order-md-4" type="button" aria-label="Toggle mode">
+			<span class="toggle-dark"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-moon"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></span>
+			<span class="toggle-light"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-sun"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></span>
+		</button>
+		<ul class="navbar-nav fork-me order-3 order-md-5">
+			
+				
+					<li class="nav-item">
+						<a class="nav-link" href="https://twitter.com/soareschen"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-twitter"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg><span class="ms-2 visually-hidden">Twitter</span></a>
+					</li>
+				
+					<li class="nav-item">
+						<a class="nav-link" href="https://github.com/maybevoid"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-github"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg><span class="ms-2 visually-hidden">GitHub</span></a>
+					</li>
+				
+			
+		</ul>
+		<div class="collapse navbar-collapse order-4 order-md-1">
+			<ul class="navbar-nav main-nav me-auto order-5 order-md-2">
+				
+					
+						<li class="nav-item">
+							<a class="nav-link" href="https://maybevoid.com/projects/">Projects</a>
+						</li>
+					
+						<li class="nav-item blog active">
+							<a class="nav-link" href="https://maybevoid.com/blog/">Blog</a>
+						</li>
+					
+						<li class="nav-item">
+							<a class="nav-link" href="https://maybevoid.com/about/">About</a>
+						</li>
+					
+				
+			</ul>
+			<div class="break order-6 d-md-none"></div>
+			
+				<form class="navbar-form flex-grow-1 order-7 order-md-3">
+					<input id="userinput" class="form-control is-search" type="search" placeholder="Search docs..."
+						aria-label="Search docs..." autocomplete="off">
+					<div id="suggestions" class="shadow bg-white rounded"></div>
+				</form>
+			
+		</div>
+	</div>
+</header>
+
+
+
+  
+<div class="wrap container" role="document">
+  <div class="content">
+    <div class="row justify-content-center">
+      <div class="col-md-12 col-lg-10 col-xl-8">
+        <article>
+          <div class="blog-header">
+            <h1>Mononym: Type-Level Named Values in Rust - Part 1: Demo and Implementation</h1>
+            
+<p><small>Posted October 31, 2021&nbsp;&hyphen;&nbsp;<strong>20&nbsp;min read</strong></small><p>
+
+          </div>
+          
+          <h1 id="announcement">Announcement</h1>
+<p>I am happy to announce the release of <a href="https://docs.rs/mononym/0.1.0/mononym/"><code>mononym</code></a>, a Rust library for creating unique type-level names for each value in Rust.</p>
+<p>Mononym provides the core type <code>Named&lt;N, T&gt;</code>, which represents a named value of type <code>T</code> with a unique type <code>N</code> as its name. Mononym guarantees that there can be no two values with the same name. With that, the <code>N</code> type serves as a unique representation of a Rust value at the type level.</p>
+<p>Mononym enables the use of the design pattern <a href="https://kataskeue.com/gdp.pdf">Ghosts of Departed Proofs</a> in Rust. It provides macros that simplify the definition of <a href="https://docs.idris-lang.org/en/latest/tutorial/typesfuns.html#dependent-pairs">dependent pairs</a> and proof objects in Rust. Although there is still limited support for a full dependently-typed programming in Rust, Mononym helps us move a small step toward that direction by making it possible to refer to values in types.</p>
+<p>You can find out more about Mononym at the <a href="https://github.com/maybevoid/mononym">project GitHub</a>, and try it out by adding the <a href="https://crates.io/crates/mononym"><code>mononym</code> crate</a> to your Rust project.</p>
+<h2 id="demo-tutorial">Demo Tutorial</h2>
+<p>As a quick demo, Mononym can be used to construct named values and
+create proofs that relate multiple values as follows:</p>
+<pre data-lang="rust" style="background-color:#fdf6e3;color:#657b83;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#586e75;">pub </span><span style="color:#268bd2;">mod </span><span style="color:#b58900;">less_than_eq
+</span><span>{
+</span><span>  </span><span style="color:#859900;">use </span><span>mononym::*;
+</span><span>
+</span><span>  </span><span style="color:#859900;">proof! </span><span>{
+</span><span>    LessThanEq(x: </span><span style="color:#268bd2;">u32</span><span>, y: </span><span style="color:#268bd2;">u32</span><span>);
+</span><span>  }
+</span><span>
+</span><span>  </span><span style="color:#586e75;">pub </span><span style="color:#268bd2;">fn </span><span style="color:#b58900;">check_less_than_eq</span><span>&lt;XVal: HasType&lt;</span><span style="color:#268bd2;">u32</span><span>&gt;, YVal: HasType&lt;</span><span style="color:#268bd2;">u32</span><span>&gt;&gt;(
+</span><span>    </span><span style="color:#268bd2;">x</span><span>: </span><span style="color:#859900;">&amp;</span><span>Named&lt;XVal, </span><span style="color:#268bd2;">u32</span><span>&gt;,
+</span><span>    </span><span style="color:#268bd2;">y</span><span>: </span><span style="color:#859900;">&amp;</span><span>Named&lt;YVal, </span><span style="color:#268bd2;">u32</span><span>&gt;,
+</span><span>  ) -&gt; </span><span style="color:#859900;">Option</span><span>&lt;LessThanEq&lt;XVal, YVal&gt;&gt;
+</span><span>  {
+</span><span>    </span><span style="color:#859900;">if</span><span> x.</span><span style="color:#859900;">value</span><span>() &lt;= y.</span><span style="color:#859900;">value</span><span>() {
+</span><span>      </span><span style="color:#859900;">Some</span><span>(LessThanEq::new())
+</span><span>    } </span><span style="color:#859900;">else </span><span>{
+</span><span>      </span><span style="color:#859900;">None
+</span><span>    }
+</span><span>  }
+</span><span>}
+</span></code></pre>
+<p>We define a <code>less_than_eq</code> module that defines a <code>LessThanEq</code> proof type using the <a href="https://docs.rs/mononym/0.1.0/mononym/macro.proof.html"><code>proof!</code></a> macro provided by Mononym. The function <code>check_less_than_eq</code> is then defined to accept two <em>named values</em> <code>x</code> and <code>y</code>, with the type names <code>XVal</code> and <code>YVal</code> representing the values <code>x</code> and <code>y</code> at the type level. In the function body, it checks that if <code>x</code> (<code>XVal</code>) is indeed less than or equal to <code>y</code> (<code>YVal</code>), it would return the proof in the form of <code>LessThanEq&lt;XVal, YVal&gt;</code>.</p>
+<p>We can then write a main program that use the <code>less_than_eq</code> module as follows:</p>
+<pre data-lang="rust" style="background-color:#fdf6e3;color:#657b83;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#859900;">use </span><span>less_than_eq::*;
+</span><span style="color:#859900;">use </span><span>mononym::*;
+</span><span>
+</span><span style="color:#859900;">with_seed</span><span>(|</span><span style="color:#268bd2;">seed</span><span>| {
+</span><span>  </span><span style="color:#268bd2;">let </span><span>(seed1, seed2) = seed.</span><span style="color:#859900;">replicate</span><span>();
+</span><span>  </span><span style="color:#268bd2;">let</span><span> x: Named&lt;</span><span style="color:#859900;">_</span><span>, </span><span style="color:#268bd2;">u32</span><span>&gt; = seed1.</span><span style="color:#859900;">new_named</span><span>(</span><span style="color:#6c71c4;">2</span><span>);
+</span><span>  </span><span style="color:#268bd2;">let</span><span> y: Named&lt;</span><span style="color:#859900;">_</span><span>, </span><span style="color:#268bd2;">u32</span><span>&gt; = seed2.</span><span style="color:#859900;">new_named</span><span>(</span><span style="color:#6c71c4;">4</span><span>);
+</span><span>
+</span><span>  </span><span style="color:#268bd2;">let</span><span> x_is_less_than_y: LessThanEq&lt;</span><span style="color:#859900;">_</span><span>, </span><span style="color:#859900;">_</span><span>&gt; =
+</span><span>    </span><span style="color:#859900;">check_less_than_eq</span><span>(</span><span style="color:#859900;">&amp;</span><span>x, </span><span style="color:#859900;">&amp;</span><span>y).</span><span style="color:#859900;">expect</span><span>(</span><span style="color:#839496;">&quot;</span><span style="color:#2aa198;">should get proof that x &lt;= y</span><span style="color:#839496;">&quot;</span><span>);
+</span><span>
+</span><span>  </span><span style="color:#859900;">assert!</span><span>(</span><span style="color:#859900;">check_less_than_eq</span><span>(</span><span style="color:#859900;">&amp;</span><span>y, </span><span style="color:#859900;">&amp;</span><span>x).</span><span style="color:#859900;">is_none</span><span>());
+</span><span>});
+</span></code></pre>
+<p>We start by calling the <a href="https://docs.rs/mononym/0.1.0/mononym/fn.with_seed.html"><code>with_seed</code></a> function with a continuation closure. The <code>with_seed</code> function generates a fresh seed type which is then given to the closure as the <code>seed</code> variable. We then call <code>seed.replicate()</code> to create two new copies of seed, because it is an <em>affine</em> value in Rust that can be used at most once.</p>
+<p>Each seed value can be used once to generate a named value. We then assign the variable <code>x</code> to <code>seed1.new_named(2)</code>, which has the type <code>Named&lt;_, u32&gt;</code>. Mononym provides the <a href="https://docs.rs/mononym/0.1.0/mononym/struct.Named.html"><code>Named</code></a> type to represent Rust values with unique name types. In this case, the <code>_</code> is used in the first position of the <code>Named</code> type for <code>x</code>, because the <a href="https://docs.rs/mononym/0.1.0/mononym/struct.Seed.html#method.new_named"><code>new_named</code></a> method returns a <code>Named</code> type with an opaque type as the name.</p>
+<p>Similarly, the variable <code>y</code> is assigned to <code>seed2.new_named(4)</code>. Note that even though <code>y</code> also have the type <code>Named&lt;_, u32&gt;</code>, it is in fact a different type than the type of <code>x</code>. With Mononym guaranteeing the uniqueness of name types, we can conceptually fill in the <code>_</code> and refer to the name type of <code>x</code> being <code>XVal</code>, and the name type of <code>y</code> being <code>YVal</code> which is different from <code>XVal</code>.</p>
+<p>We call <code>check_less_than_eq(&amp;x, &amp;y)</code>, and expect the function to return a proof that <code>x</code> with a value of 2 is indeed less than <code>y</code> with a value of 4. Similarly, if we call <code>check_less_than_eq(&amp;y, &amp;x)</code>, we expect <code>None</code> to be returned and no proof should exist for 4 being less than 2.</p>
+<p>Note that unlike in fully formalized languages like Coq, Mononym do not check that the proof <code>LessThan&lt;XVal, YVal&gt;</code> can really only be constructed if and only if <code>x</code> ≤ <code>y</code>. It is up to the implementer of functions such as <code>check_less_than</code> to ensure that the construction of proofs match the underlying invariant.</p>
+<p>Nevertheless, proofs that are constructed using mononym are useful for encoding pre- and post-conditions for functions so that they can be composed in a declarative way. For example, we can define another <code>non_zero</code> module that produce proof that a number is non-zero, and together we can create a <code>percentage</code> module that converts the division of two numbers into percentage form if and only if x ≤ y and y is not zero:</p>
+<pre data-lang="rust" style="background-color:#fdf6e3;color:#657b83;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#586e75;">pub </span><span style="color:#268bd2;">mod </span><span style="color:#b58900;">non_zero
+</span><span>{
+</span><span>  </span><span style="color:#859900;">use </span><span>mononym::*;
+</span><span>
+</span><span>  </span><span style="color:#859900;">proof! </span><span>{
+</span><span>    NonZero(num: </span><span style="color:#268bd2;">u32</span><span>);
+</span><span>  }
+</span><span>
+</span><span>  </span><span style="color:#586e75;">pub </span><span style="color:#268bd2;">fn </span><span style="color:#b58900;">check_non_zero</span><span>&lt;NumVal: HasType&lt;</span><span style="color:#268bd2;">u32</span><span>&gt;&gt;(
+</span><span>    </span><span style="color:#268bd2;">num</span><span>: </span><span style="color:#859900;">&amp;</span><span>Named&lt;NumVal, </span><span style="color:#268bd2;">u32</span><span>&gt;
+</span><span>  ) -&gt; </span><span style="color:#859900;">Option</span><span>&lt;NonZero&lt;NumVal&gt;&gt;
+</span><span>  {
+</span><span>    </span><span style="color:#859900;">if </span><span>*num.</span><span style="color:#859900;">value</span><span>() != </span><span style="color:#6c71c4;">0 </span><span>{
+</span><span>      </span><span style="color:#859900;">Some</span><span>(NonZero::new())
+</span><span>    } </span><span style="color:#859900;">else </span><span>{
+</span><span>      </span><span style="color:#859900;">None
+</span><span>    }
+</span><span>  }
+</span><span>}
+</span><span>
+</span><span style="color:#586e75;">pub </span><span style="color:#268bd2;">mod </span><span style="color:#b58900;">percentage
+</span><span>{
+</span><span>  </span><span style="color:#859900;">use </span><span>mononym::*;
+</span><span>
+</span><span>  </span><span style="color:#859900;">use super</span><span>::{
+</span><span>    less_than_eq::LessThanEq,
+</span><span>    non_zero::NonZero,
+</span><span>  };
+</span><span>
+</span><span>  </span><span style="color:#586e75;">pub </span><span style="color:#268bd2;">fn </span><span style="color:#b58900;">to_percentage</span><span>&lt;
+</span><span>    NumeratorVal: HasType&lt;</span><span style="color:#268bd2;">u32</span><span>&gt;,
+</span><span>    DenominatorVal: HasType&lt;</span><span style="color:#268bd2;">u32</span><span>&gt;,
+</span><span>  &gt;(
+</span><span>    </span><span style="color:#268bd2;">numerator</span><span>: </span><span style="color:#859900;">&amp;</span><span>Named&lt;NumeratorVal, </span><span style="color:#268bd2;">u32</span><span>&gt;,
+</span><span>    </span><span style="color:#268bd2;">denominator</span><span>: </span><span style="color:#859900;">&amp;</span><span>Named&lt;DenominatorVal, </span><span style="color:#268bd2;">u32</span><span>&gt;,
+</span><span>    </span><span style="color:#268bd2;">_numerator_lte_denom</span><span>: </span><span style="color:#859900;">&amp;</span><span>LessThanEq&lt;NumeratorVal, DenominatorVal&gt;,
+</span><span>    </span><span style="color:#268bd2;">_denom_not_zero</span><span>: </span><span style="color:#859900;">&amp;</span><span>NonZero&lt;DenominatorVal&gt;,
+</span><span>  ) -&gt; </span><span style="color:#268bd2;">f64
+</span><span>  {
+</span><span>    </span><span style="color:#268bd2;">let</span><span> numerator: </span><span style="color:#268bd2;">f64 </span><span>= (*numerator.</span><span style="color:#859900;">value</span><span>()).</span><span style="color:#859900;">into</span><span>();
+</span><span>    </span><span style="color:#268bd2;">let</span><span> denominator: </span><span style="color:#268bd2;">f64 </span><span>= (*denominator.</span><span style="color:#859900;">value</span><span>()).</span><span style="color:#859900;">into</span><span>();
+</span><span>    numerator / denominator * </span><span style="color:#6c71c4;">100.0
+</span><span>  }
+</span><span>}
+</span></code></pre>
+<p>Similar to the <code>less_than_eq</code> module, the <code>check_non_zero</code> function in the <code>non_zero</code> module checks and may return a proof <code>NonZero&lt;NumVal&gt;</code> for a value being non-zero.</p>
+<p>The <code>percentage</code> module then defines the <code>to_percentage</code> function to make use of both the proofs of <code>LessThanEq&lt;XVal, YVal&gt;</code> and <code>NonZero&lt;YVal&gt;</code> before returning a <code>f64</code> percentage value. Assuming that the proofs in <code>less_than_eq</code> and <code>non_zero</code> are constructed properly, we can guarantee that the <code>f64</code> returned by <code>to_percentage</code> is always between 0 and 100.</p>
+<p>Using Mononym, the <code>to_percentage</code> function can be defined as a <em>total</em> function, as in it does not need to return an <code>Option&lt;f64&gt;</code> or <code>Result&lt;f64, Error&gt;</code> to handle the cases where either the numerator or denominator values are invalid.</p>
+<p>We can write a test function that verifies that the <code>to_percentage</code> function works as we intended:</p>
+<pre data-lang="rust" style="background-color:#fdf6e3;color:#657b83;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#859900;">use </span><span>less_than_eq::*;
+</span><span style="color:#859900;">use </span><span>mononym::*;
+</span><span style="color:#859900;">use </span><span>non_zero::*;
+</span><span style="color:#859900;">use </span><span>percentage::*;
+</span><span>
+</span><span style="color:#859900;">with_seed</span><span>(|</span><span style="color:#268bd2;">seed</span><span>| {
+</span><span>  </span><span style="color:#268bd2;">let </span><span>(seed1, seed2) = seed.</span><span style="color:#859900;">replicate</span><span>();
+</span><span>  </span><span style="color:#268bd2;">let</span><span> x: Named&lt;</span><span style="color:#859900;">_</span><span>, </span><span style="color:#268bd2;">u32</span><span>&gt; = seed1.</span><span style="color:#859900;">new_named</span><span>(</span><span style="color:#6c71c4;">2</span><span>);
+</span><span>  </span><span style="color:#268bd2;">let</span><span> y: Named&lt;</span><span style="color:#859900;">_</span><span>, </span><span style="color:#268bd2;">u32</span><span>&gt; = seed2.</span><span style="color:#859900;">new_named</span><span>(</span><span style="color:#6c71c4;">4</span><span>);
+</span><span>
+</span><span>  </span><span style="color:#268bd2;">let</span><span> x_is_less_than_y: LessThanEq&lt;</span><span style="color:#859900;">_</span><span>, </span><span style="color:#859900;">_</span><span>&gt; =
+</span><span>    </span><span style="color:#859900;">check_less_than_eq</span><span>(</span><span style="color:#859900;">&amp;</span><span>x, </span><span style="color:#859900;">&amp;</span><span>y).</span><span style="color:#859900;">expect</span><span>(</span><span style="color:#839496;">&quot;</span><span style="color:#2aa198;">should get proof that x &lt;= y</span><span style="color:#839496;">&quot;</span><span>);
+</span><span>
+</span><span>  </span><span style="color:#268bd2;">let</span><span> y_not_zero =
+</span><span>    </span><span style="color:#859900;">check_non_zero</span><span>(</span><span style="color:#859900;">&amp;</span><span>y).</span><span style="color:#859900;">expect</span><span>(</span><span style="color:#839496;">&quot;</span><span style="color:#2aa198;">should get proof that y is non zero</span><span style="color:#839496;">&quot;</span><span>);
+</span><span>
+</span><span>  </span><span style="color:#268bd2;">let</span><span> percent = </span><span style="color:#859900;">to_percentage</span><span>(</span><span style="color:#859900;">&amp;</span><span>x, </span><span style="color:#859900;">&amp;</span><span>y, </span><span style="color:#859900;">&amp;</span><span>x_is_less_than_y, </span><span style="color:#859900;">&amp;</span><span>y_not_zero);
+</span><span>
+</span><span>  </span><span style="color:#859900;">assert_eq!</span><span>(percent, </span><span style="color:#6c71c4;">50.0</span><span>);
+</span><span>})
+</span></code></pre>
+<p>It is worth noting that the types provided by mononym also help ensure that the proofs we obtained correspond to the correct value. For example, if we accidentally got the proof of <code>x</code> being non_zero instead of <code>y</code> in <code>check_non_zero(&amp;x)</code>, the call to <code>to_percentage</code> would result in a type error informing us that the non-zero proof we have for <code>x</code> is invalid.</p>
+<p>Although we cannot use Rust to formally prove that <code>to_percentage</code> will always return a valid percentage value between 0 and 100, Mononym can help reduce significantly the surface area of code that can potentially violate such invariant.</p>
+<p>Since we know that the proofs <code>LessThanEq</code> and <code>NonZero</code> can only be produced by <code>less_than_eq</code> and <code>non_zero</code>, we do not need to worry about any other potential cases that <code>to_percentage</code> can be given invalid arguments, no matter how large and how complex our code base become.</p>
+<p>We can also use Mononym together with techniques such as <a href="https://github.com/BurntSushi/quickcheck">property based testing</a> to further ensure that the behavior of <code>to_percentage</code> is correct. In such property-based test, the random generator can attempt to randomly generate named values, and call <code>to_percentage</code> only when valid proofs can be constructed using <code>less_than_eq</code> and <code>non_zero</code>. This would significantly reduce the number of test cases needed, as compared to a brute force generator that have to test the function with the cartesian product of <code>u32</code> * <code>u32</code>. (Note that integration with testing framework is still a future work planned for Mononym)</p>
+<h1 id="technical-overview">Technical Overview</h1>
+<p>In this section, I will go through the technical details of how Mononym enforce uniquness of name types using language features that are unique to Rust, such as <code>impl Trait</code> and higher-ranked trait bounds. These features allow Mononym to have a simpler implementation of name types, as compared to existing implementations in languages like <a href="https://hackage.haskell.org/package/gdp">Haskell</a>.</p>
+<p>This section will assume that the reader already have some familiarity to type-driven development, and understand the usefulness of representing values as type-level names for constructing proofs. In the future part of the series, I will walk through readers who are unfamiliar with these concepts with more examples similar to the one shown in the demo section.</p>
+<h2 id="impl-trait-as-opaque-types"><code>impl Trait</code> as Opaque Types</h2>
+<p>At its core, Mononym makes use of the idea that the use of <code>impl Trait</code> in return position produces a new <a href="https://doc.rust-lang.org/reference/types/impl-trait.html#abstract-return-types">abstract type</a> that is unique to that function.</p>
+<p>Consider the following example:</p>
+<pre data-lang="rust" style="background-color:#fdf6e3;color:#657b83;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#268bd2;">trait </span><span style="color:#b58900;">Name </span><span>{}
+</span><span style="color:#268bd2;">impl </span><span>Name </span><span style="color:#859900;">for</span><span> () {}
+</span><span>
+</span><span style="color:#268bd2;">fn </span><span style="color:#b58900;">foo</span><span>() -&gt; impl Name {}
+</span><span style="color:#268bd2;">fn </span><span style="color:#b58900;">bar</span><span>() -&gt; impl Name {}
+</span><span>
+</span><span style="color:#268bd2;">fn </span><span style="color:#b58900;">same</span><span>&lt;T&gt;(</span><span style="color:#859900;">_</span><span>: T, </span><span style="color:#859900;">_</span><span>: T) {}
+</span><span style="color:#859900;">same</span><span>(</span><span style="color:#859900;">foo</span><span>(), </span><span style="color:#859900;">foo</span><span>());
+</span><span style="color:#859900;">same</span><span>(</span><span style="color:#859900;">bar</span><span>(), </span><span style="color:#859900;">bar</span><span>());
+</span><span style="color:#859900;">same</span><span>(</span><span style="color:#859900;">foo</span><span>(), </span><span style="color:#859900;">bar</span><span>()); </span><span style="color:#93a1a1;">// error
+</span><span style="color:#859900;">same</span><span>(</span><span style="color:#859900;">foo</span><span>(), ()); </span><span style="color:#93a1a1;">// error
+</span><span style="color:#859900;">same</span><span>(</span><span style="color:#859900;">bar</span><span>(), ()); </span><span style="color:#93a1a1;">// error
+</span></code></pre>
+<p>We define a dummy trait <code>Name</code> that is implemented only for <code>()</code>. We then define two functions <code>foo()</code> and <code>bar()</code> that return <code>impl Name</code> by returning <code>()</code>. Although both <code>foo()</code> and <code>bar()</code> are in effect returning the same concrete type <code>()</code>, they are considered different types by the Rust compiler.</p>
+<p>To test whether the types of two values are equal, we define the function <code>same&lt;T&gt;(_: T, _: T)</code> that pass the compilation check if two values have the same type. When we try to compile the code, we will find that both <code>same(foo(), foo())</code> and <code>same(bar(), bar())</code> pass the compilation, but <code>same(foo(), bar())</code> would result in a type error. Similarly, the check on <code>same(foo(), ())</code> fails, as Rust treats the returned <code>impl Name</code> different than the underlying type <code>()</code>.</p>
+<h2 id="generic-dependent-uniqueness-of-impl-trait">Generic-dependent Uniqueness of <code>impl Trait</code></h2>
+<p>The use of <code>impl Name</code> in return position provides the first step toward defining unique names for each value. However the above code shows an obvious issue of using returned <code>impl Name</code> as unique type, as the test <code>same(foo(), foo())</code> pass the compilation. This means that two calls to the same function returning <code>impl Trait</code> will return values of the same opaque type. If we want the name type to be truly unique, the test <code>same(foo(), foo())</code> should have failed.</p>
+<p>We can try to force the opaque type returned in a function returning <code>impl Name</code> unique by making the function <em>generic</em>:</p>
+<pre data-lang="rust" style="background-color:#fdf6e3;color:#657b83;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#268bd2;">trait </span><span style="color:#b58900;">Name </span><span>{}
+</span><span style="color:#268bd2;">impl </span><span>Name </span><span style="color:#859900;">for</span><span> () {}
+</span><span>
+</span><span style="color:#268bd2;">fn </span><span style="color:#b58900;">type_name</span><span>&lt;T&gt;(</span><span style="color:#859900;">_</span><span>: T) -&gt; impl Name {}
+</span><span>
+</span><span style="color:#268bd2;">fn </span><span style="color:#b58900;">same</span><span>&lt;T&gt;(</span><span style="color:#859900;">_</span><span>: T, </span><span style="color:#859900;">_</span><span>: T) {}
+</span><span style="color:#859900;">same</span><span>(</span><span style="color:#859900;">type_name</span><span>(()), </span><span style="color:#859900;">type_name</span><span>(()));
+</span><span style="color:#859900;">same</span><span>(</span><span style="color:#859900;">type_name</span><span>(</span><span style="color:#6c71c4;">0_</span><span style="color:#268bd2;">u64</span><span>), </span><span style="color:#859900;">type_name</span><span>(</span><span style="color:#6c71c4;">0_</span><span style="color:#268bd2;">u64</span><span>));
+</span><span style="color:#859900;">same</span><span>(</span><span style="color:#859900;">type_name</span><span>(()), </span><span style="color:#859900;">type_name</span><span>(</span><span style="color:#6c71c4;">0_</span><span style="color:#268bd2;">u64</span><span>)); </span><span style="color:#93a1a1;">// error
+</span><span style="color:#859900;">same</span><span>(</span><span style="color:#859900;">type_name</span><span>(</span><span style="color:#6c71c4;">0_</span><span style="color:#268bd2;">u32</span><span>), </span><span style="color:#859900;">type_name</span><span>(</span><span style="color:#6c71c4;">0_</span><span style="color:#268bd2;">u64</span><span>)); </span><span style="color:#93a1a1;">// error
+</span><span style="color:#859900;">same</span><span>(</span><span style="color:#859900;">type_name</span><span>(||{}), </span><span style="color:#859900;">type_name</span><span>(||{})) </span><span style="color:#93a1a1;">// error
+</span></code></pre>
+<p>In the above example, we define a <code>type_name</code> function that accepts a dummy value of any generic type, and return an <code>impl Name</code>. From there we can see that when <code>type_name</code> is called with the same type, the returned <code>impl Name</code> is considered the same type. As a result, the tests to <code>same(type_name(()), type_name(()))</code> and <code>same(type_name(0_u64), type_name(0_u64))</code> pass the compilation, but tests such as <code>same(type_name(()), type_name(0_u64))</code> fail the compilation.</p>
+<h2 id="closure-expressions-as-unique-type">Closure Expressions as Unique Type</h2>
+<p>In the last test, we also see that the compilation test for <code>same(type_name(||{}), type_name(||{}))</code> has failed. This is because each new closure expression in Rust produces a <a href="https://doc.rust-lang.org/reference/types/closure.html">unique anonymous type</a>. With this, we know that as long as we are providing different closure expressions, the returned <code>impl Name</code> would be considered different type by Rust.</p>
+<p>Moving one step further, we can instead define the implementation for <code>Name</code> using the anonymous closure type:</p>
+<pre data-lang="rust" style="background-color:#fdf6e3;color:#657b83;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#859900;">use </span><span>core::marker::PhantomData;
+</span><span>
+</span><span style="color:#268bd2;">trait </span><span style="color:#b58900;">Name </span><span>{}
+</span><span style="color:#268bd2;">struct </span><span style="color:#b58900;">SomeName</span><span>&lt;N&gt;(PhantomData&lt;N&gt;);
+</span><span style="color:#268bd2;">impl </span><span>&lt;N&gt; Name </span><span style="color:#859900;">for </span><span style="color:#b58900;">SomeName</span><span>&lt;N&gt; {}
+</span><span>
+</span><span style="color:#268bd2;">fn </span><span style="color:#b58900;">unsafe_new_name</span><span>&lt;N&gt;(</span><span style="color:#859900;">_</span><span>: N) -&gt; impl Name {
+</span><span>    SomeName::&lt;N&gt;(PhantomData)
+</span><span>}
+</span><span>
+</span><span style="color:#268bd2;">fn </span><span style="color:#b58900;">same</span><span>&lt;T&gt;(</span><span style="color:#859900;">_</span><span>: T, </span><span style="color:#859900;">_</span><span>: T) {}
+</span><span>
+</span><span style="color:#268bd2;">let </span><span style="color:#b58900;">f </span><span style="color:#859900;">= </span><span>||{};
+</span><span style="color:#859900;">same</span><span>(</span><span style="color:#859900;">unsafe_new_name</span><span>(f), </span><span style="color:#859900;">unsafe_new_name</span><span>(f));
+</span><span>
+</span><span style="color:#268bd2;">fn </span><span style="color:#b58900;">foo</span><span>() -&gt; impl Name {
+</span><span>    </span><span style="color:#859900;">unsafe_new_name</span><span>(||{})
+</span><span>}
+</span><span style="color:#859900;">same</span><span>(</span><span style="color:#859900;">foo</span><span>(), </span><span style="color:#859900;">foo</span><span>())
+</span><span>
+</span><span style="color:#859900;">same</span><span>(</span><span style="color:#859900;">unsafe_new_name</span><span>(||{}), </span><span style="color:#859900;">unsafe_new_name</span><span>(||{})); </span><span style="color:#93a1a1;">// error
+</span></code></pre>
+<p>We define a struct <code>SomeName&lt;N&gt;</code> that implements <code>Name</code> based on the unique type <code>N</code>. We then rename our name generator function to <code>unsafe_new_name</code> and make it return <code>SomeName</code> based on the given generic type <code>N</code>. We keep the <code>SomeName</code> struct and <code>unsafe_new_name</code> private, so that external users cannot create new <code>impl Name</code> that may violate the uniqueness guarantee.</p>
+<p>We can see that at this stage the name creation is still unsafe, as user can still bind the closure expression to a variable like <code>let f = ||{}</code>, and then the resulting test <code>same(unsafe_new_name(f), unsafe_new_name(f))</code> would pass. Similarly, if we define a function like <code>foo() -&gt; impl Name</code> that calls <code>unsafe_new_name(||{})</code> inside the function, the resulting test <code>same(foo(), foo())</code> would still pass the compilation.</p>
+<h2 id="name-seed">Name Seed</h2>
+<p>To guarantee that every opaque type behind an <code>impl Name</code> is unique, we need to ensure that not only the inner function that returns <code>impl Name</code> is generic, but also <em>all</em> possible functions that return <code>impl Name</code> must be generic as well.</p>
+<p>While it is possible to ask end users to provide a unique type using <code>||{}</code> at each function definition and and call, doing so can be error prone and confusing. Instead, we want to define a <em>name seed</em> that is a unique type itself, and use it to generate new names.</p>
+<p>We implement the <code>Seed</code> type as follows:</p>
+<pre data-lang="rust" style="background-color:#fdf6e3;color:#657b83;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#859900;">use </span><span>core::marker::PhantomData;
+</span><span>
+</span><span style="color:#586e75;">pub </span><span style="color:#268bd2;">trait </span><span style="color:#b58900;">Name </span><span>{}
+</span><span style="color:#268bd2;">struct </span><span style="color:#b58900;">SomeName</span><span>&lt;N&gt;(PhantomData&lt;N&gt;);
+</span><span style="color:#268bd2;">impl </span><span>&lt;N&gt; Name </span><span style="color:#859900;">for </span><span style="color:#b58900;">SomeName</span><span>&lt;N&gt; {}
+</span><span>
+</span><span style="color:#586e75;">pub </span><span style="color:#268bd2;">struct </span><span style="color:#b58900;">Seed</span><span>&lt;N&gt;(PhantomData&lt;N&gt;);
+</span><span>
+</span><span style="color:#268bd2;">impl </span><span>&lt;N: Name&gt; </span><span style="color:#b58900;">Seed</span><span>&lt;N&gt; {
+</span><span>  </span><span style="color:#586e75;">pub </span><span style="color:#268bd2;">fn </span><span style="color:#b58900;">new_name</span><span>(</span><span style="color:#268bd2;">self</span><span>) -&gt; impl Name
+</span><span>  {
+</span><span>    SomeName::&lt;N&gt;(PhantomData)
+</span><span>  }
+</span><span>
+</span><span>  </span><span style="color:#586e75;">pub </span><span style="color:#268bd2;">fn </span><span style="color:#b58900;">replicate</span><span>(</span><span style="color:#268bd2;">self</span><span>) -&gt; (Seed&lt;impl Name&gt;, Seed&lt;impl Name&gt;)
+</span><span>  {
+</span><span>    (Seed(PhantomData::&lt;N&gt;), Seed(PhantomData::&lt;N&gt;))
+</span><span>  }
+</span><span>}
+</span></code></pre>
+<p>The type <code>Seed&lt;N&gt;</code> is parameterized by a name <code>N</code> and provides two methods. The first method <code>new_name(self)</code> <em>consumes</em> the seed and returns a new <code>impl Name</code> (notice the lack of <code>&amp;</code> in <code>self</code>). Since the seed is consumed when generating the name, the same seed cannot be used to generate another new name of the same type.</p>
+<p>Although the seed is consumed during name generation, the second method <code>replicate(self)</code> consumes the original seed, and returns two new seeds with unique names in the form of <code>Seed&lt;impl Name&gt;</code>. Notice that the two <code>Seed&lt;impl Name&gt;</code> returned by <code>replicate</code> are considered different types by Rust, even when they have the same underlying concrete type <code>Seed&lt;N&gt;</code>. By calling <code>replicate</code> one or more times, we will be able to generate multiple names with unique types.</p>
+<p>Since there is no public constructor function to create new <code>Seed</code> value, the only way external users can create new seed is by replicating existing seeds. In this way, external functions would have to always accept <code>Seed&lt;impl Name&gt;</code> as an argument somewhere along the function calls to be able to generate new names.</p>
+<pre data-lang="rust" style="background-color:#fdf6e3;color:#657b83;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#268bd2;">fn </span><span style="color:#b58900;">test</span><span>(</span><span style="color:#268bd2;">seed</span><span>: Seed&lt;impl Name&gt;) {
+</span><span>  </span><span style="color:#268bd2;">fn </span><span style="color:#b58900;">same</span><span>&lt;T&gt;(</span><span style="color:#859900;">_</span><span>: T, </span><span style="color:#859900;">_</span><span>: T) {}
+</span><span>  </span><span style="color:#268bd2;">let </span><span>(seed1, seed2) = seed.</span><span style="color:#859900;">replicate</span><span>();
+</span><span>  </span><span style="color:#859900;">same</span><span>(seed1, seed2); </span><span style="color:#93a1a1;">// error
+</span><span>  </span><span style="color:#859900;">same</span><span>(seed1.</span><span style="color:#859900;">new_name</span><span>(), seed2.</span><span style="color:#859900;">new_name</span><span>()); </span><span style="color:#93a1a1;">// error
+</span><span>}
+</span></code></pre>
+<p>By treating our <code>test</code> function as an external function, it is forced to accept a <code>Seed&lt;impl Name&gt;</code> in order to generate new <code>impl Name</code>s. We first use <code>seed.replicate()</code> to create two new seeds <code>seed1</code> and <code>seed2</code>. When we compile the code, we can find out that the test <code>same(seed1, seed2)</code> fails, indicating that the two replicated seeds have different types. Similarly, the test <code>same(seed1.new_name(), seed2.new_name())</code> fails because the two names are generated from different seeds. It is also not possible to do something like <code>same(seed.new_name(), seed.new_name())</code>, because the affine type system of Rust consumes the seed during name generation and do not allow the seed to be reused.</p>
+<h2 id="named-values">Named Values</h2>
+<p>The <code>Seed</code> type we defined earlier provides a <code>new_name</code> method that returns unique <code>impl Name</code>. While having a unique name is not very useful on its own, it can be used to define a <code>Named&lt;N, T&gt;</code> struct to assign unique names to a given value of type <code>T</code>. The <code>Named</code> struct is defined and used as follows:</p>
+<pre data-lang="rust" style="background-color:#fdf6e3;color:#657b83;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#859900;">use </span><span>core::marker::PhantomData;
+</span><span>
+</span><span style="color:#586e75;">pub </span><span style="color:#268bd2;">struct </span><span style="color:#b58900;">Named</span><span>&lt;N, T&gt;(T, PhantomData&lt;N&gt;);
+</span><span>
+</span><span style="color:#268bd2;">impl </span><span>&lt;N, T&gt; </span><span style="color:#b58900;">Named</span><span>&lt;N, T&gt; {
+</span><span>  </span><span style="color:#586e75;">pub </span><span style="color:#268bd2;">fn </span><span style="color:#b58900;">value</span><span>(</span><span style="color:#859900;">&amp;</span><span style="color:#268bd2;">self</span><span>) -&gt; </span><span style="color:#859900;">&amp;</span><span>T { </span><span style="color:#859900;">&amp;</span><span style="color:#d33682;">self</span><span>.</span><span style="color:#6c71c4;">0 </span><span>}
+</span><span>  </span><span style="color:#586e75;">pub </span><span style="color:#268bd2;">fn </span><span style="color:#b58900;">into_value</span><span>(</span><span style="color:#268bd2;">self</span><span>) -&gt; T { </span><span style="color:#d33682;">self</span><span>.</span><span style="color:#6c71c4;">0 </span><span>}
+</span><span>}
+</span><span>
+</span><span style="color:#586e75;">pub </span><span style="color:#268bd2;">trait </span><span style="color:#b58900;">Name </span><span>{}
+</span><span style="color:#586e75;">pub </span><span style="color:#268bd2;">struct </span><span style="color:#b58900;">Seed</span><span>&lt;N&gt;(PhantomData&lt;N&gt;);
+</span><span>
+</span><span style="color:#268bd2;">impl </span><span>&lt;N: Name&gt; </span><span style="color:#b58900;">Seed</span><span>&lt;N&gt; {
+</span><span>  </span><span style="color:#586e75;">pub </span><span style="color:#268bd2;">fn </span><span style="color:#b58900;">new_named</span><span>&lt;T&gt;(</span><span style="color:#268bd2;">self</span><span>, </span><span style="color:#268bd2;">value</span><span>: T) -&gt; Named&lt;impl Name, T&gt;
+</span><span>  {
+</span><span>    Named::&lt;N, </span><span style="color:#859900;">_</span><span>&gt;(value, PhantomData)
+</span><span>  }
+</span><span>
+</span><span>   </span><span style="color:#586e75;">pub </span><span style="color:#268bd2;">fn </span><span style="color:#b58900;">replicate</span><span>(</span><span style="color:#268bd2;">self</span><span>) -&gt; (Seed&lt;impl Name&gt;, Seed&lt;impl Name&gt;)
+</span><span>  {
+</span><span>    (Seed(PhantomData::&lt;N&gt;), Seed(PhantomData::&lt;N&gt;))
+</span><span>  }
+</span><span>}
+</span></code></pre>
+<p>The struct <code>Named&lt;N, T&gt;</code> is essentially a newtype wrapper around <code>T</code>, with the underlying value kept private. The <code>Named</code> type provides two public methods, <code>value</code> for getting a reference to the underlying value, and <code>into_value</code> to convert the named value to the underlying value.</p>
+<p>The <code>Seed</code> type now provides a <code>new_named</code> method that accepts an owned value of type <code>T</code>, and returns a <code>Named&lt;impl Name, T&gt;</code>. Because the <code>impl Name</code> is nested inside <code>Named</code>, we can guarantee that the new name given to the value is unique, provided that the <code>Seed</code> type is unique.</p>
+<pre data-lang="rust" style="background-color:#fdf6e3;color:#657b83;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#268bd2;">fn </span><span style="color:#b58900;">test</span><span>(</span><span style="color:#268bd2;">seed</span><span>: Seed&lt;impl Name&gt;) {
+</span><span>  </span><span style="color:#268bd2;">fn </span><span style="color:#b58900;">same</span><span>&lt;T&gt;(</span><span style="color:#859900;">_</span><span>: T, </span><span style="color:#859900;">_</span><span>: T) {}
+</span><span>  </span><span style="color:#268bd2;">let </span><span>(seed1, seed2) = seed.</span><span style="color:#859900;">replicate</span><span>();
+</span><span>  </span><span style="color:#859900;">same</span><span>(seed1.</span><span style="color:#859900;">new_named</span><span>(</span><span style="color:#6c71c4;">1</span><span>), seed2.</span><span style="color:#859900;">new_named</span><span>(</span><span style="color:#6c71c4;">1</span><span>)); </span><span style="color:#93a1a1;">// error
+</span><span>}
+</span></code></pre>
+<p>Similar to earlier, we can test that two named values indeed have different names by writing a <code>test</code> function that accepts a <code>Seed&lt;impl Name&gt;</code>. After replicating the seed, we can verify that the test <code>same(seed1.new_named(1), seed2.new_named(1))</code> fails with error during compilation. This shows that the <code>Named&lt;impl Name, i32&gt;</code> values returned by the two calls to <code>new_name</code> are indeed unique.</p>
+<p>We can think of the type <code>Named&lt;N, T&gt;</code> as being a <a href="https://www.seas.upenn.edu/~sweirich/papers/haskell12.pdf"><em>singleton type</em></a>, that is, a type with only one possible value. With Rust's affine type system, the singleton guarantee is even stronger that we can never have two Rust values of type <code>Named&lt;N, T&gt;</code> with the same <code>N</code> type.</p>
+<h2 id="unique-lifetime-with-higher-ranked-trait-bounds">Unique Lifetime with Higher Ranked Trait Bounds</h2>
+<p>Our setup for generating uniquely named values is mostly complete, provided we are able to hand over the first unique <code>Seed</code> value to the main function to start generating new names. But we cannot simply expose a function like <code>fn new_seed() -&gt; Seed&lt;impl Name&gt;</code>, as we know that two calls to the same function will return two values of the same type, thereby making them non-unique.</p>
+<p>We know that in languages like Haskell, it is possible to generate unique types by using continuation-passing-style with <em>higher-ranked</em> continuations. While Rust do not currently support higher-ranked types, it instead supports <a href="https://rustc-dev-guide.rust-lang.org/traits/hrtb.html"><em>higher-ranked trait bounds</em></a> (HRTB) which can be used in similar way.</p>
+<pre data-lang="rust" style="background-color:#fdf6e3;color:#657b83;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#859900;">use </span><span>core::marker::PhantomData;
+</span><span>
+</span><span style="color:#586e75;">pub </span><span style="color:#268bd2;">trait </span><span style="color:#b58900;">Name </span><span>{}
+</span><span style="color:#586e75;">pub </span><span style="color:#268bd2;">struct </span><span style="color:#b58900;">Life</span><span>&lt;</span><span style="color:#586e75;">&#39;name</span><span>&gt;(PhantomData&lt;</span><span style="color:#586e75;">*mut </span><span style="color:#859900;">&amp;</span><span style="color:#586e75;">&#39;name </span><span>()&gt;);
+</span><span style="color:#268bd2;">impl</span><span>&lt;</span><span style="color:#586e75;">&#39;name</span><span>&gt; Name </span><span style="color:#859900;">for </span><span style="color:#b58900;">Life</span><span>&lt;</span><span style="color:#586e75;">&#39;name</span><span>&gt; {}
+</span><span>
+</span><span style="color:#586e75;">pub </span><span style="color:#268bd2;">fn </span><span style="color:#b58900;">with_seed</span><span>&lt;R&gt;(
+</span><span>  </span><span style="color:#268bd2;">cont</span><span>: impl for&lt;</span><span style="color:#586e75;">&#39;name</span><span>&gt; FnOnce(</span><span style="color:#268bd2;">Seed</span><span>&lt;</span><span style="color:#268bd2;">Life</span><span>&lt;&#39;</span><span style="color:#268bd2;">name</span><span>&gt;&gt;) -&gt; R
+</span><span>) -&gt; R {
+</span><span>  </span><span style="color:#859900;">cont</span><span>(Seed(PhantomData))
+</span><span>}
+</span><span>
+</span><span style="color:#586e75;">pub </span><span style="color:#268bd2;">struct </span><span style="color:#b58900;">Named</span><span>&lt;N, T&gt;(T, PhantomData&lt;N&gt;);
+</span><span>
+</span><span style="color:#268bd2;">impl </span><span>&lt;N, T&gt; </span><span style="color:#b58900;">Named</span><span>&lt;N, T&gt; {
+</span><span>  </span><span style="color:#586e75;">pub </span><span style="color:#268bd2;">fn </span><span style="color:#b58900;">value</span><span>(</span><span style="color:#859900;">&amp;</span><span style="color:#268bd2;">self</span><span>) -&gt; </span><span style="color:#859900;">&amp;</span><span>T { </span><span style="color:#859900;">&amp;</span><span style="color:#d33682;">self</span><span>.</span><span style="color:#6c71c4;">0 </span><span>}
+</span><span>  </span><span style="color:#586e75;">pub </span><span style="color:#268bd2;">fn </span><span style="color:#b58900;">into_value</span><span>(</span><span style="color:#268bd2;">self</span><span>) -&gt; T { </span><span style="color:#d33682;">self</span><span>.</span><span style="color:#6c71c4;">0 </span><span>}
+</span><span>}
+</span><span>
+</span><span style="color:#586e75;">pub </span><span style="color:#268bd2;">struct </span><span style="color:#b58900;">Seed</span><span>&lt;N&gt;(PhantomData&lt;N&gt;);
+</span><span>
+</span><span style="color:#268bd2;">impl </span><span>&lt;N: Name&gt; </span><span style="color:#b58900;">Seed</span><span>&lt;N&gt; {
+</span><span>  </span><span style="color:#586e75;">pub </span><span style="color:#268bd2;">fn </span><span style="color:#b58900;">new_named</span><span>&lt;T&gt;(</span><span style="color:#268bd2;">self</span><span>, </span><span style="color:#268bd2;">value</span><span>: T) -&gt; Named&lt;impl Name, T&gt;
+</span><span>  {
+</span><span>    Named::&lt;N, </span><span style="color:#859900;">_</span><span>&gt;(value, PhantomData)
+</span><span>  }
+</span><span>
+</span><span>   </span><span style="color:#586e75;">pub </span><span style="color:#268bd2;">fn </span><span style="color:#b58900;">replicate</span><span>(</span><span style="color:#268bd2;">self</span><span>) -&gt; (Seed&lt;impl Name&gt;, Seed&lt;impl Name&gt;)
+</span><span>  {
+</span><span>    (Seed(PhantomData::&lt;N&gt;), Seed(PhantomData::&lt;N&gt;))
+</span><span>  }
+</span><span>}
+</span></code></pre>
+<p>We first come out with a different way of generating unique types, using the <code>Life</code> type that is parameterized by a <em>unique lifetime</em>. The struct is defined as <code>struct Life&lt;'name&gt;(PhantomData&lt;*mut &amp;'name ()&gt;)</code>. The inner type <code>PhantomData&lt;*mut &amp;'name ()&gt;</code> makes Rust treats <code>Life&lt;'name&gt;</code> as if it is a raw pointer of type <code>*mut &amp;'name ()</code>. We specifically make it so that Rust treats <code>'name</code> as an <em>invariant</em> phantom lifetime. This means that if we have two types <code>Life&lt;'name1&gt;</code> and <code>Life&lt;'name2&gt;</code>, Rust would consider them as different types even if there are partial overlaps such as <code>'name1: 'name2</code>.</p>
+<p>Using <code>Life</code>, we now simplify the problem of generating unique names to generating unique lifetimes. We then define the <code>with_seed</code> function, which accepts a continuation with a <em>higher-ranked trait bound</em> <code>impl for&lt;'name&gt; FnOnce(Seed&lt;Life&lt;'name&gt;&gt;) -&gt; R</code>. The <code>for&lt;'name&gt;</code> part forces the continuation closure to work with <em>all</em> possible lifetimes. As a result, we can guarantee that the type <code>Life&lt;'name&gt;</code> is always unique inside the closure. By using <code>Life&lt;'name&gt;</code> as the unique type inside <code>Seed&lt;Life&lt;'name&gt;&gt;</code>, we ensure that the seed type given to the continuation closure is also unique.</p>
+<pre data-lang="rust" style="background-color:#fdf6e3;color:#657b83;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#268bd2;">fn </span><span style="color:#b58900;">same</span><span>&lt;T&gt;(</span><span style="color:#859900;">_</span><span>: T, </span><span style="color:#859900;">_</span><span>: T) {}
+</span><span>
+</span><span style="color:#859900;">with_seed</span><span>(|</span><span style="color:#268bd2;">seed</span><span>| {
+</span><span>  </span><span style="color:#268bd2;">let </span><span>(seed1, seed2) = seed.</span><span style="color:#859900;">replicate</span><span>();
+</span><span>  </span><span style="color:#859900;">same</span><span>(seed1, seed2); </span><span style="color:#93a1a1;">// error
+</span><span>  </span><span style="color:#859900;">same</span><span>(seed1.</span><span style="color:#859900;">new_named</span><span>(</span><span style="color:#6c71c4;">1</span><span>), seed2.</span><span style="color:#859900;">new_named</span><span>(</span><span style="color:#6c71c4;">1</span><span>)); </span><span style="color:#93a1a1;">// error
+</span><span>});
+</span><span>
+</span><span style="color:#859900;">with_seed</span><span>(|</span><span style="color:#268bd2;">seed1</span><span>| {
+</span><span>  </span><span style="color:#859900;">with_seed</span><span>(|</span><span style="color:#268bd2;">seed2</span><span>| {
+</span><span>    </span><span style="color:#859900;">same</span><span>(seed1, seed2); </span><span style="color:#93a1a1;">// error
+</span><span>    </span><span style="color:#859900;">same</span><span>(seed1.</span><span style="color:#859900;">new_named</span><span>(</span><span style="color:#6c71c4;">1</span><span>), seed2.</span><span style="color:#859900;">new_named</span><span>(</span><span style="color:#6c71c4;">1</span><span>)); </span><span style="color:#93a1a1;">// error
+</span><span>  });
+</span><span>});
+</span></code></pre>
+<p>We can now repeat the same test we had earlier, but now with the tests running inside the closure given to <code>with_seed</code>. We can verify that after replicating the seed, the tests <code>same(seed1, seed2)</code> and <code>same(seed1.new_named(1), seed2.new_named(1))</code> still fail with compilation error, indicating that the names generated are different.</p>
+<p>We can also repeat the same test with two nested calls to <code>with_seed</code>, thereby getting two separate fresh seeds <code>seed1</code> and <code>seed2</code>. Thanks to the magic of HRTB and invariant phantom lifetime, we can verify that even in this case the test <code>same(seed1, seed2)</code> still fails, indicating that Rust is treating the two underlying lifetimes differently. Similarly, the test <code>same(seed1.new_named(1), seed2.new_named(1))</code> also fails, indicating that names generated by two different seeds are indeed different.</p>
+<p>The techniques of using phantom lifetimes as names and using HRTB to generate new lifetimes is first explored in <a href="http://plv.mpi-sws.org/rustbelt/ghostcell/">GhostCell</a>. With that, we close the loop of unique name generation by requiring the top level program to generate the first seed using <code>with_seed</code>. Furthermore, since multiple calls to <code>with_seed</code> is safe, this means that there is no way for external users to do unsafe construction of two seeds or named values of the same type. From this, we can safely reason that assuming unsafe Rust is not used, whenever we get a value of type <code>Named&lt;N, T&gt;</code>, the type <code>N</code> is always uniquely assigned to the underlying value.</p>
+<h1 id="up-next">Up Next</h1>
+<p>This concludes the first part of the blog post series for Mononym. In the next part, we will go through how proof objects are defined using the <a href="https://docs.rs/mononym/0.1.0/mononym/macro.proof.html"><code>proof!</code></a> macro, and how newly named values can be returned together with proofs by defining dependent pair types using the <a href="https://docs.rs/mononym/0.1.0/mononym/macro.exists.html"><code>exists!</code></a> macro. We will also go through with more examples of how to use <code>proof!</code> and <code>exists!</code> to implement stronger guarantees to our code.</p>
+
+        </article>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+  
+    
+<footer class="footer text-muted">
+	<div class="container">
+		<div class="row">
+			<div class="col-lg-8 order-last order-lg-first">
+				<ul class="list-inline">
+					
+						<li class="list-inline-item">MaybeVoid</li>
+					
+				</ul>
+			</div>
+			<div class="col-lg-8 order-first order-lg-last text-lg-end">
+				<ul class="list-inline">
+					
+						
+							<li class="list-inline-item"><a href="https://maybevoid.com/">Home</a></li>
+						
+							<li class="list-inline-item"><a href="https://maybevoid.com/privacy-policy/">Privacy</a></li>
+						
+					
+				</ul>
+			</div>
+		</div>
+	</div>
+</footer>
+
+  
+
+  
+<script src="https://maybevoid.com/js/main.js" defer></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.18/dist/katex.min.js" integrity="sha384-GxNFqL3r9uRJQhR+47eDxuPoNE7yLftQM8LcxzgS4HT73tp970WS/wV5p8UzCOmb" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.18/dist/contrib/auto-render.min.js" integrity="sha384-vZTG03m+2yp6N6BNi5iM4rW4oIwk5DfcNdFfxkk9ZWpDriOkXX8voJBFrAO7MpVl" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+
+  <script src="https://maybevoid.com/plugins/elasticlunr.min.js" defer></script>
+  <script src="https://maybevoid.com/search_index.en.js" defer></script>
+  <script src="https://maybevoid.com/js/search.js" defer></script>
+
+
+</body>
+</html>
